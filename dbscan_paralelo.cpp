@@ -130,12 +130,12 @@ int main(int argc, char** argv) {
         // index 2: 0 for noise point, 1 for core point
     }*/
 
-    float points[7][3] = {{1.0, 2.0, 0.0}, {1.5, 2.5, 0.0}, {2.0, 3.0, 0.0}, {8.0, 8.0, 0.0}, {8.5, 7.5, 0.0}, {9.0, 8.5, 0.0}, {100, 100, 0.0}};
+    float points2[7][3] = {{1.0, 2.0, 0.0}, {1.5, 2.5, 0.0}, {2.0, 3.0, 0.0}, {8.0, 8.0, 0.0}, {8.5, 7.5, 0.0}, {9.0, 8.5, 0.0}, {50, 50, 0.0}};
 
     // Crear un arreglo de punteros y asignar punteros a cada fila
     float* rowPointers[7];
     for (int i = 0; i < 7; ++i) {
-        rowPointers[i] = points[i];
+        rowPointers[i] = points2[i];
     }
 
     //load_CSV(input_file_name, points, size);
