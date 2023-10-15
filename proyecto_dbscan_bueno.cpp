@@ -4,7 +4,6 @@
 #include <fstream>
 #include <cmath>
 #include <vector>
-#include <set>
 
 using namespace std;
 
@@ -85,40 +84,34 @@ void dbscan_serial(float** points, double eps, int minPts, long long int size) {
 // Función principal de DBSCAN paralelo
 void dbscan_paralelo(float** points, double eps, int minPts, long long int size) {
 
+    omp_set_num_threads(4);
+
     #pragma omp parallel for
     for (int i = 0; i < size; ++i) {
         if (points[i][2] != 0) {
             continue; // Punto ya visitado
         }
 
-        std::vector<int> neighbors = findNeighbors(points, i, eps, size);
+        std::vector<int> neighbors;
+
+        #pragma omp parallel for
+        for (int j = 0; j < size; ++j) {
+            if (i != j && distance(points[i], points[j]) <= eps) {
+                neighbors.push_back(j);
+            }
+        }
 
         if (neighbors.size() < minPts) {
-            #pragma omp critical
-            {
-                points[i][2] = 0; // Marcar como ruido
-            }
+            points[i][2] = 0; // Marcar como ruido
         } else {
-            #pragma omp critical
-            {
-                points[i][2] = 1; // Asignar un nuevo clúster
-            }
+            points[i][2] = 1; // Asignar un nuevo clúster
 
             for (size_t j = 0; j < neighbors.size(); ++j) {
                 int neighborIndex = neighbors[j];
 
                 if (points[neighborIndex][2] == 0) {
-                    #pragma omp critical
-                    {
-                        points[neighborIndex][2] = 1;
-                    }
-                } else if (points[neighborIndex][2] == 1) {
-
-                    std::vector<int> neighborNeighbors = findNeighbors(points, neighborIndex, eps, size);
-                    if (neighborNeighbors.size() >= minPts) {
-                        neighbors.insert(neighbors.end(), neighborNeighbors.begin(), neighborNeighbors.end());
-                    }
-                }
+                    points[neighborIndex][2] = 1;
+                } 
             }
         }
     }
@@ -132,6 +125,7 @@ void load_CSV(string file_name, float** points, long long int size) {
     if (!in) {
         cerr << "Couldn't read file: " << file_name << "\n";
     }
+    
     long long int point_number = 0; 
     while (!in.eof() && (point_number < size)) {
         char* line = new char[12];
@@ -142,7 +136,7 @@ void load_CSV(string file_name, float** points, long long int size) {
         points[point_number][0] = stof(row.substr(0, 5));
         points[point_number][1] = stof(row.substr(6, 5));
         point_number++;
-    }
+    } 
 }
 
 void save_to_CSV(string file_name, float** points, long long int size) {
@@ -157,38 +151,38 @@ void save_to_CSV(string file_name, float** points, long long int size) {
 
 int main(int argc, char** argv) {
 
-    const float epsilon = 1.2;
-    const int min_samples = 2;
-    const long long int size = 7;
+    const float epsilon = 0.03;
+    const int min_samples = 10;
+    const long long int size = 4000;
     const string input_file_name = to_string(size)+"_data.csv";
     const string output_file_name = to_string(size)+"_results.csv";    
-    //float** points = new float*[size];
+    float** points = new float*[size];
 
-    /*
     for(long long int i = 0; i < size; i++) {
         points[i] = new float[3]{0.0, 0.0, 0.0}; 
         // index 0: position x
         // index 1: position y 
         // index 2: 0 for noise point, 1 for core point
-    }*/
-
-    float points[7][3] = {{1.0, 2.0, 0.0}, {1.5, 2.5, 0.0}, {2.0, 3.0, 0.0}, {8.0, 8.0, 0.0}, {8.5, 7.5, 0.0}, {9.0, 8.5, 0.0}, {100, 100, 0.0}};
-
-    // Crear un arreglo de punteros y asignar punteros a cada fila
-    float* rowPointers[7];
-    for (int i = 0; i < 7; ++i) {
-        rowPointers[i] = points[i];
     }
 
-    //load_CSV(input_file_name, points, size);
+    //float points[13][3] = {{-100, -100, 0.0}, {-101, -101, 0.0}, {-100.5, -100.5, 0.0}, {-99.9, -99.9, 0.0}, {1.2, 2.2, 0.0}, {1.0, 2.0, 0.0}, {1.5, 2.5, 0.0}, {2.0, 3.0, 0.0}, {8.0, 8.0, 0.0}, {8.5, 7.5, 0.0}, {9.0, 8.5, 0.0}, {9.2, 8.5, 0.0}, {100, 100, 0.0}};
+
+    // Crear un arreglo de punteros y asignar punteros a cada fila
+    /*
+    float* rowPointers[13];
+    for (int i = 0; i < 13; ++i) {
+        rowPointers[i] = points[i];
+    } */
+
+    load_CSV(input_file_name, points, size);
     
-    dbscan_paralelo(rowPointers, epsilon, min_samples, size); 
+    //dbscan_paralelo(points, epsilon, min_samples, size); 
         
     //save_to_CSV(output_file_name, points, size);
 
-    //for(long long int i = 0; i < size; i++) {
-        //delete[] points[i];
-    //}
-    //delete[] points;
+    for(long long int i = 0; i < size; i++) {
+        delete[] points[i];
+    }
+    delete[] points;
     return 0;
 }
