@@ -114,46 +114,44 @@ void save_to_CSV(string file_name, float** points, long long int size) {
 
 int main(int argc, char** argv) {
 
-    const float epsilon = 1.2;
+    const float epsilon = .1;
     const int min_samples = 2;
-    const long long int size = 7;
-    const string input_file_name = to_string(size)+"_data.csv";
+    int size = atoi(argv[1]);
+    int num_threads = atoi(argv[2]);
+    float** points = new float*[size];
+    const string input_file_name = "4000_data.csv";
     const string output_file_name = to_string(size)+"_results.csv"; 
-    int number_threads = 4;  
-    //float** points = new float*[size];
 
-    /*
+    
     for(long long int i = 0; i < size; i++) {
         points[i] = new float[3]{0.0, 0.0, 0.0}; 
         // index 0: position x
         // index 1: position y 
         // index 2: 0 for noise point, 1 for core point
-    }*/
-
-    float points2[7][3] = {{1.0, 2.0, 0.0}, {1.5, 2.5, 0.0}, {2.0, 3.0, 0.0}, {8.0, 8.0, 0.0}, {8.5, 7.5, 0.0}, {9.0, 8.5, 0.0}, {50, 50, 0.0}};
-
-    // Crear un arreglo de punteros y asignar punteros a cada fila
-    float* rowPointers[7];
-    for (int i = 0; i < 7; ++i) {
-        rowPointers[i] = points2[i];
     }
 
-    //load_CSV(input_file_name, points, size);
+    load_CSV(input_file_name, points, size);
+    
+    // Crear un arreglo de punteros y asignar punteros a cada fila
+    float* rowPointers[size];
+    for (int i = 0; i < size; ++i) {
+        rowPointers[i] = points[i];
+    }
 
     //tomamos tiempo paralelo
-    omp_set_num_threads(number_threads);
+    omp_set_num_threads(num_threads);
     double start_time_par = omp_get_wtime();
     dbscan_paralelo(rowPointers, epsilon, min_samples, size); 
     double end_time_par = omp_get_wtime();
 
-    //imprimimos ambos tiempos
+    //imprimimos tiempo
     std::cout << "Tiempo paralelo: " << end_time_par - start_time_par << " segundos\n";
-        
-    //save_to_CSV(output_file_name, points, size);
 
-    //for(long long int i = 0; i < size; i++) {
-        //delete[] points[i];
-    //}
-    //delete[] points;
+    save_to_CSV(output_file_name, points, size);
+
+    for(long long int i = 0; i < size; i++) {
+        delete[] points[i];
+    }
+    delete[] points;
     return 0;
 }
