@@ -48,6 +48,22 @@ std::vector<int> findNeighbors(float** points, int pointIndex, double eps, long 
     return neighbors;
 }
 
+std::vector<int> findNeighbors_paralelo(float** points, int pointIndex, double eps, long long int size) {
+    std::vector<int> neighbors;
+    #pragma omp parallel for 
+    for (int i = 0; i < size; ++i) {
+        if (i != pointIndex) {
+            if (distance(points[pointIndex], points[i]) <= eps) {
+                #pragma omp critical 
+                {
+                neighbors.push_back(i);
+                }
+            }
+        }
+    }
+    return neighbors;
+}
+
 
 // Función principal de DBSCAN
 void dbscan_serial(float** points, double eps, int minPts, long long int size) {
@@ -84,6 +100,8 @@ void dbscan_serial(float** points, double eps, int minPts, long long int size) {
     noise_detection_serial(points, eps, minPts, size);
 }
 
+
+
 // Función principal de DBSCAN paralelo
 void dbscan_paralelo(float** points, double eps, int minPts, long long int size) {
 
@@ -93,12 +111,15 @@ void dbscan_paralelo(float** points, double eps, int minPts, long long int size)
             continue; // Punto ya visitado
         }
 
-        std::vector<int> neighbors;
+        std::vector<int> neighbors = findNeighbors_paralelo(points, i, eps, size);
 
         #pragma omp parallel for
         for (int j = 0; j < size; ++j) {
             if (i != j && distance(points[i], points[j]) <= eps) {
+                #pragma omp critical 
+                {
                 neighbors.push_back(j);
+                }
             }
         }
 
@@ -123,7 +144,7 @@ void dbscan_paralelo(float** points, double eps, int minPts, long long int size)
                         points[neighborIndex][2] = 1;
                     }
 
-                    std::vector<int> neighborNeighbors = findNeighbors(points, neighborIndex, eps, size);
+                    std::vector<int> neighborNeighbors = findNeighbors_paralelo(points, neighborIndex, eps, size);
 
                     if (neighborNeighbors.size() >= minPts) {
                         neighbors.insert(neighbors.end(), neighborNeighbors.begin(), neighborNeighbors.end());
@@ -136,6 +157,7 @@ void dbscan_paralelo(float** points, double eps, int minPts, long long int size)
     // Llamar a detectOutliers para identificar outliers (ruido)
     noise_detection_paralelo(points, eps, minPts, size);
 }
+
 
 void load_CSV(string file_name, float** points, long long int size) {
     ifstream in(file_name);
