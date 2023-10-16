@@ -168,24 +168,25 @@ void save_to_CSV(string file_name, float** points, long long int size) {
 
 int main(int argc, char** argv) {
 
-    omp_set_num_threads(8);
-
-    const float epsilon = 1.2;
-    const int min_samples = 2;
-    const long long int size = 14;
-    const string input_file_name = to_string(size)+"_data.csv";
+    const float epsilon = 0.1;
+    const int min_samples = 5;
+    int size = atoi(argv[1]);
+    int num_threads = atoi(argv[2]);
+    const string input_file_name = "4000_data.csv";
     const string output_file_name = to_string(size)+"_results.csv";    
-    //float** points = new float*[size];
+    float** points = new float*[size];
 
-    /*
+
+    omp_set_num_threads(num_threads);
+
     for(long long int i = 0; i < size; i++) {
         points[i] = new float[3]{0.0, 0.0, 0.0}; 
         // index 0: position x
         // index 1: position y 
         // index 2: 0 for noise point, 1 for core point
-    } */
-
-    float points[size][3] = {{-100, -100, 0.0}, {-101.5,-101.5}, {-101, -101, 0.0}, {-100.5, -100.5, 0.0}, {-99.9, -99.9, 0.0}, {1.2, 2.2, 0.0}, {1.0, 2.0, 0.0}, {1.5, 2.5, 0.0}, {2.0, 3.0, 0.0}, {8.0, 8.0, 0.0}, {8.5, 7.5, 0.0}, {9.0, 8.5, 0.0}, {9.2, 8.5, 0.0}, {100, 100, 0.0}};
+    }
+    load_CSV(input_file_name, points, size);
+    //float points[size][3] = {{-100, -100, 0.0}, {-101.5,-101.5}, {-101, -101, 0.0}, {-100.5, -100.5, 0.0}, {-99.9, -99.9, 0.0}, {1.2, 2.2, 0.0}, {1.0, 2.0, 0.0}, {1.5, 2.5, 0.0}, {2.0, 3.0, 0.0}, {8.0, 8.0, 0.0}, {8.5, 7.5, 0.0}, {9.0, 8.5, 0.0}, {9.2, 8.5, 0.0}, {100, 100, 0.0}};
 
     // Crear un arreglo de punteros y asignar punteros a cada fila
     
@@ -193,19 +194,30 @@ int main(int argc, char** argv) {
     for (int i = 0; i < size; ++i) {
         rowPointers[i] = points[i];
     } 
-
-    //load_CSV(input_file_name, points, size);
     
-    dbscan_serial(rowPointers, epsilon, min_samples, size); 
-        
-    //save_to_CSV(output_file_name, points, size);
-
-
     /*
+    //tiempo serial
+    double start_time_ser = omp_get_wtime();
+    dbscan_serial(rowPointers, epsilon, min_samples, size); 
+    double end_time_ser = omp_get_wtime();
+    */
+
+    //tiempo paralelo
+    double start_time_par = omp_get_wtime();
+    dbscan_paralelo(rowPointers, epsilon, min_samples, size);
+    double end_time_par = omp_get_wtime();
+    
+    //salvamos los resultados
+    save_to_CSV(output_file_name, points, size);
+
+    //imprimimos tiempo serial y paralelo
+    //cout << "Tiempo serial: " << end_time_ser - start_time_ser << " segundos\n";
+    cout << "Tiempo paralelo: " << end_time_par - start_time_par << " segundos\n";
+    
     for(long long int i = 0; i < size; i++) {
         delete[] points[i];
     }
     delete[] points;
-    */
+
     return 0;
 }
