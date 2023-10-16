@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
     const int min_samples = 15;
     int size = atoi(argv[1]);
     int num_threads = atoi(argv[2]);
-    const string input_file_name = "4000_data.csv";
+    const string input_file_name = "200000_data.csv";
     const string output_file_name = to_string(size)+"_results.csv";    
     float** points = new float*[size];
 
@@ -173,25 +173,18 @@ int main(int argc, char** argv) {
         // index 2: 0 for noise point, 1 for core point
     }
     load_CSV(input_file_name, points, size);
-    //float points[size][3] = {{-100, -100, 0.0}, {-101.5,-101.5}, {-101, -101, 0.0}, {-100.5, -100.5, 0.0}, {-99.9, -99.9, 0.0}, {1.2, 2.2, 0.0}, {1.0, 2.0, 0.0}, {1.5, 2.5, 0.0}, {2.0, 3.0, 0.0}, {8.0, 8.0, 0.0}, {8.5, 7.5, 0.0}, {9.0, 8.5, 0.0}, {9.2, 8.5, 0.0}, {100, 100, 0.0}};
 
-    // Crear un arreglo de punteros y asignar punteros a cada fila
-    
-    float* rowPointers[size];
-    for (int i = 0; i < size; ++i) {
-        rowPointers[i] = points[i];
-    } 
     
     /*
     //tiempo serial
     double start_time_ser = omp_get_wtime();
-    dbscan_serial(rowPointers, epsilon, min_samples, size); 
+    dbscan_serial(points, epsilon, min_samples, size); 
     double end_time_ser = omp_get_wtime();
-    */
+    */    
 
     //tiempo paralelo
     double start_time_par = omp_get_wtime();
-    dbscan_paralelo(rowPointers, epsilon, min_samples, size);
+    dbscan_paralelo(points, epsilon, min_samples, size);
     double end_time_par = omp_get_wtime();
     
     //salvamos los resultados
