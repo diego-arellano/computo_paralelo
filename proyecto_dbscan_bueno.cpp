@@ -190,8 +190,8 @@ void save_to_CSV(string file_name, float** points, long long int size) {
 
 int main(int argc, char** argv) {
 
-    const float epsilon = 0.1;
-    const int min_samples = 5;
+    const float epsilon = 1;
+    const int min_samples = 3;
     int size = atoi(argv[1]);
     int num_threads = atoi(argv[2]);
     const string input_file_name = "4000_data.csv";
