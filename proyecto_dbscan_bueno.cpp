@@ -12,7 +12,7 @@ void noise_detection_serial(float** points, float epsilon, int min_samples, long
 
     for (long long int i=0; i < size; i++) {
         if( points[i][2] == 0)
-            cout << "Outlier: (" << points[i][0] << ", " << points[i][1] << ")\n";
+            cout << "Outlier serial: (" << points[i][0] << ", " << points[i][1] << ")\n";
     }
 
 }
@@ -23,7 +23,7 @@ void noise_detection_paralelo(float** points, float epsilon, int min_samples, lo
         if (points[i][2] == 0) {
             #pragma omp critical
             {
-                cout << "Outlier: (" << points[i][0] << ", " << points[i][1] << ")\n";
+                cout << "Outlier paralelo: (" << points[i][0] << ", " << points[i][1] << ")\n";
             }
         }
     }
@@ -68,11 +68,6 @@ void dbscan_serial(float** points, double eps, int minPts, long long int size) {
 
                 if (points[neighborIndex][2] == 0) {
                     points[neighborIndex][2] = 1;
-                } else if (points[neighborIndex][2] == 1) {
-                    std::vector<int> neighborNeighbors = findNeighbors(points, neighborIndex, eps, size);
-                    if (neighborNeighbors.size() >= minPts) {
-                        neighbors.insert(neighbors.end(), neighborNeighbors.begin(), neighborNeighbors.end());
-                    }
                 }
             }
         }
@@ -82,9 +77,9 @@ void dbscan_serial(float** points, double eps, int minPts, long long int size) {
 }
 
 // Función principal de DBSCAN paralelo
-void dbscan_paralelo(float** points, double eps, int minPts, long long int size) {
+void dbscan_paralelo(float** points, double eps, int minPts, long long int size, int num_threads) {
 
-    omp_set_num_threads(4);
+    omp_set_num_threads(num_threads);
 
     #pragma omp parallel for
     for (int i = 0; i < size; ++i) {
@@ -151,9 +146,10 @@ void save_to_CSV(string file_name, float** points, long long int size) {
 
 int main(int argc, char** argv) {
 
-    const float epsilon = 0.02;
-    const int min_samples = 40;
+    const float epsilon = 0.1;
+    const int min_samples = 5;
     int size = atoi(argv[1]);
+    int num_threads = atoi(argv[2]);
     const string input_file_name = "4000_data.csv";
     const string output_file_name = to_string(size)+"_results.csv";    
     float** points = new float*[size];
@@ -165,13 +161,29 @@ int main(int argc, char** argv) {
         // index 2: 0 for noise point, 1 for core point
     }
 
-    //float points[13][3] = {{-100, -100, 0.0}, {-101, -101, 0.0}, {-100.5, -100.5, 0.0}, {-99.9, -99.9, 0.0}, {1.2, 2.2, 0.0}, {1.0, 2.0, 0.0}, {1.5, 2.5, 0.0}, {2.0, 3.0, 0.0}, {8.0, 8.0, 0.0}, {8.5, 7.5, 0.0}, {9.0, 8.5, 0.0}, {9.2, 8.5, 0.0}, {100, 100, 0.0}};
-
+    //cargamos sólo n=size datos
     load_CSV(input_file_name, points, size);
     
-    dbscan_paralelo(points, epsilon, min_samples, size); 
+    /*
+    //tiempo que tarda el serial
+    double start_time_ser = omp_get_wtime();
+    dbscan_serial(points, epsilon, min_samples, size);
+    double end_time_ser = omp_get_wtime();
+    */
+
+    
+    //tiempo que tarda el paralelo
+    double start_time_par = omp_get_wtime();
+    dbscan_paralelo(points, epsilon, min_samples, size, num_threads);
+    double end_time_par = omp_get_wtime();
+    
         
+    //salvamos los resultados del paralelo en csv
     save_to_CSV(output_file_name, points, size);
+
+    //imprimimos tiempos serial y paralelo
+    //cout << "Tiempo serial: " << end_time_ser - start_time_ser << " segundos\n";
+    cout << "Tiempo paralelo: " << end_time_par - start_time_par << " segundos\n";
 
     for(long long int i = 0; i < size; i++) {
         delete[] points[i];
