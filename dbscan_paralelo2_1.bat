@@ -1,0 +1,1 @@
+dbscan_paralelo.exe 200000 16

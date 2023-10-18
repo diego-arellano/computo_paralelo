@@ -90,7 +90,7 @@ void dbscan_serial(float** points, double eps, int minPts, long long int size) {
     }
 
      // Llamar a detectOutliers para identificar outliers (ruido)
-    noise_detection_serial(points, eps, minPts, size);
+    //noise_detection_serial(points, eps, minPts, size);
 }
 
 
@@ -120,7 +120,7 @@ void dbscan_paralelo(float** points, double eps, int minPts, long long int size)
     }
 
      // Llamar a detectOutliers para identificar outliers (ruido)
-    noise_detection_paralelo(points, eps, minPts, size);
+    //noise_detection_paralelo(points, eps, minPts, size);
 }
 
 
@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
     const int min_samples = 15;
     int size = atoi(argv[1]);
     int num_threads = atoi(argv[2]);
-    const string input_file_name = "200000_data.csv";
+    const string input_file_name = "auxilio.csv";
     const string output_file_name = to_string(size)+"_results.csv";    
     float** points = new float*[size];
 
@@ -175,25 +175,27 @@ int main(int argc, char** argv) {
     load_CSV(input_file_name, points, size);
 
     
-    /*
+    
     //tiempo serial
     double start_time_ser = omp_get_wtime();
     dbscan_serial(points, epsilon, min_samples, size); 
     double end_time_ser = omp_get_wtime();
-    */    
+    
 
+    /*
     //tiempo paralelo
     double start_time_par = omp_get_wtime();
     dbscan_paralelo(points, epsilon, min_samples, size);
     double end_time_par = omp_get_wtime();
+    */
     
     //salvamos los resultados
-    save_to_CSV(output_file_name, points, size);
+    //save_to_CSV(output_file_name, points, size);
 
     //imprimimos tiempo serial y paralelo
-    //cout << "Tiempo serial: " << end_time_ser - start_time_ser << " segundos\n";
-    cout << "Tiempo paralelo: " << end_time_par - start_time_par << " segundos\n";
-    
+    cout << "Tiempo serial: " << end_time_ser - start_time_ser << " segundos\n";
+    //cout << "Tiempo paralelo: " << end_time_par - start_time_par << " segundos\n";
+
     for(long long int i = 0; i < size; i++) {
         delete[] points[i];
     }
