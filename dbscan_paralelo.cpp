@@ -140,11 +140,11 @@ void save_to_CSV(string file_name, float** points, long long int size) {
 
 //PRUEBAS
 int main(int argc, char** argv) {
-    const float epsilon = 0.3;
-    const int min_samples = 15;
+    const float epsilon = 0.03;
+    const int min_samples = 10;
     int size = atoi(argv[1]);
     int num_threads = atoi(argv[2]);
-    const string input_file_name = "auxilio.csv"; //no cargaba con el nombre 200000_data.csv (no sabemos por qué)
+    const string input_file_name = "10000_data.csv"; //no cargaba con el nombre 200000_data.csv (no sabemos por qué)
     const string output_file_name = to_string(size)+"_results.csv";
     float** points = new float*[size];
 
@@ -162,12 +162,12 @@ int main(int argc, char** argv) {
     load_CSV(input_file_name, points, size);
 
     
-    /*
+    
     //tiempo serial
     double start_time_ser = omp_get_wtime();
     dbscan_serial(points, epsilon, min_samples, size); 
     double end_time_ser = omp_get_wtime();
-    */
+    
 
     
     //tiempo paralelo
@@ -177,10 +177,10 @@ int main(int argc, char** argv) {
     
     
     //salvamos los resultados
-    //save_to_CSV(output_file_name, points, size);
+    save_to_CSV(output_file_name, points, size);
 
     //imprimimos tiempo serial y paralelo
-    //cout << "Tiempo serial: " << end_time_ser - start_time_ser << " segundos\n";
+    cout << "Tiempo serial: " << end_time_ser - start_time_ser << " segundos\n";
     cout << "Tiempo paralelo: " << end_time_par - start_time_par << " segundos\n";
 
     //borramos los puntos
