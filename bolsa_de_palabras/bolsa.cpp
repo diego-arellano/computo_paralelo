@@ -13,13 +13,13 @@ std::unordered_map<std::string, int> contarOcurrencias(std::ifstream &vocabulari
     std::string palabra;
 
     // Leer el vocabulario
-    while (std::getline(vocabulario, palabra)) {
+    while (std::getline(vocabulario, palabra, ',')) {
         contador[palabra] = 0; // Inicializar el contador para cada palabra del vocabulario
     }
 
     // Leer el libro
     std::string linea;
-    while (std::getline(libro, linea)) {
+    while (std::getline(libro, linea, ',')) {
         std::istringstream iss(linea);
         while (iss >> palabra) {
             // Si la palabra está en el vocabulario, incrementar el contador
