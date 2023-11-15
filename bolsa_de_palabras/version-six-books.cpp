@@ -31,7 +31,7 @@ std::unordered_map<std::string, int> contarOcurrencias(std::ifstream &vocabulari
 }
 
 // Función para guardar las ocurrencias en un archivo CSV
-void guardarCSV(const std::unordered_map<std::string, int> &contador, const std::string &nombreLibro, const std::string &nombreArchivoSalida) {
+void guardarCSV(const std::unordered_map<std::string, int> &contador, const std::string &nombreLibro, const std::string &nombreArchivoSalida, const std::vector<std::string> &vocabulario) {
     std::ofstream archivoSalida(nombreArchivoSalida, std::ios::app); // Modo de apertura: append
     if (!archivoSalida.is_open()) {
         std::cerr << "Error al abrir el archivo de salida." << std::endl;
@@ -41,12 +41,21 @@ void guardarCSV(const std::unordered_map<std::string, int> &contador, const std:
     // Escribir el nombre del libro como primera columna
     archivoSalida << nombreLibro;
 
-    // Escribir datos
-    for (const auto &par : contador) {
-        archivoSalida << "," << par.second; // Asumiendo que se desea la ocurrencia de la palabra
+    // Escribir encabezados de columnas (palabras)
+    for (const auto &palabra : vocabulario) {
+        archivoSalida << "," << palabra;
     }
 
     archivoSalida << "\n";
+
+    // Escribir datos
+    archivoSalida << nombreLibro;
+    for (const auto &palabra : vocabulario) {
+        archivoSalida << "," << contador.at(palabra);
+    }
+
+    archivoSalida << "\n";
+
     archivoSalida.close();
 }
 
@@ -56,6 +65,14 @@ int main() {
 
     // Nombres de los archivos CSV de libros
     std::vector<std::string> archivosLibros = {"libro1.csv", "libro2.csv", "libro3.csv", "libro4.csv", "libro5.csv", "libro6.csv"};
+
+    // Leer el vocabulario
+    std::ifstream archivoVocabularioStream(archivoVocabulario);
+    std::vector<std::string> vocabulario;
+    std::string palabra;
+    while (std::getline(archivoVocabularioStream, palabra)) {
+        vocabulario.push_back(palabra);
+    }
 
     // Para cada libro, contar las ocurrencias y guardar en un archivo CSV
     for (const auto &archivoLibro : archivosLibros) {
@@ -74,7 +91,7 @@ int main() {
         std::unordered_map<std::string, int> contador = contarOcurrencias(vocabulario, libro);
 
         // Guardar resultados en un archivo CSV
-        guardarCSV(contador, nombreLibro, "resultados.csv");
+        guardarCSV(contador, nombreLibro, "resultados.csv", vocabulario);
 
         std::cout << "Proceso completado para " << nombreLibro << ". Resultados guardados en resultados.csv" << std::endl;
 
