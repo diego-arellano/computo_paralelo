@@ -55,7 +55,7 @@ int main() {
     std::string archivoVocabulario = "vocabulario.csv";
 
     // Nombres de los archivos CSV de libros
-    std::vector<std::string> archivosLibros = {"libro1.csv", "libro2.csv", "libro3.csv", "libro4.csv", "libro5.csv", "libro6.csv"};
+    std::vector<std::string> archivosLibros = {"dickens_a_christmas_carol.txt", "dickens_a_tale_of_two_cities.txt", "dickens_oliver_twist.txt", "shakespeare_hamlet.txt", "shakespeare_romeo_juliet.txt", "shakespeare_the_merchant_of_venice.txt"};
 
     // Para cada libro, contar las ocurrencias y guardar en un archivo CSV
     for (const auto &archivoLibro : archivosLibros) {
