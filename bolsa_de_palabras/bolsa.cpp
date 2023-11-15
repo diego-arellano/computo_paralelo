@@ -1,24 +1,81 @@
-#include <mpi.h>
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <unordered_map>
+#include <vector>
+#include <string>
 
-using namespace std;
+// Función para contar las ocurrencias de palabras en el libro
+std::unordered_map<std::string, int> contarOcurrencias(std::ifstream &vocabulario, std::ifstream &libro) {
+    std::unordered_map<std::string, int> contador;
+    std::string palabra;
 
-int main (int argc, char *argv[]) {
-    // Verifica si se proporcionaron suficientes argumentos
-    if (argc < 4) {
-        std::cerr << "Uso: " << argv[0] << " <archivo1> <archivo2> ... <archivon> <vocabulario.txt> <num_procesos>" << std::endl;
-        return 1; // Termina el programa con un código de error
+    // Leer el vocabulario
+    while (std::getline(vocabulario, palabra)) {
+        contador[palabra] = 0; // Inicializar el contador para cada palabra del vocabulario
     }
 
-    // Obtén los nombres de los archivos de palabras en un array
-    std::vector<std::string> archivosPalabras;
-    for (int i = 1; i < argc - 2; ++i) {
-        archivosPalabras.push_back(argv[i]);
+    // Leer el libro
+    std::string linea;
+    while (std::getline(libro, linea)) {
+        std::istringstream iss(linea);
+        while (iss >> palabra) {
+            // Si la palabra está en el vocabulario, incrementar el contador
+            if (contador.find(palabra) != contador.end()) {
+                contador[palabra]++;
+            }
+        }
     }
-    // Obtén el nombre del archivo de vocabulario
-    std::string archivoVocabulario = argv[argc - 2];
-    // Obtén el número de procesos
-    int numProcesos = std::stoi(argv[argc - 1]);
+
+    return contador;
+}
+
+// Función para guardar las ocurrencias en un archivo CSV
+void guardarCSV(const std::unordered_map<std::string, int> &contador, const std::string &nombreArchivoSalida) {
+    std::ofstream archivoSalida(nombreArchivoSalida);
+    if (!archivoSalida.is_open()) {
+        std::cerr << "Error al abrir el archivo de salida." << std::endl;
+        return;
+    }
+
+    // Escribir encabezado
+    archivoSalida << "Palabra, Ocurrencias\n";
+
+    // Escribir datos
+    for (const auto &par : contador) {
+        archivoSalida << par.first << "," << par.second << "\n";
+    }
+
+    archivoSalida.close();
+}
+
+int main() {
+    // Nombre de los archivos CSV de entrada y salida
+    std::string archivoVocabulario = "vocabulario.csv";
+    std::string archivoLibro = "libro.csv";
+    std::string archivoSalida = "ocurrencias.csv";
+
+    // Abrir archivos de entrada
+    std::ifstream vocabulario(archivoVocabulario);
+    std::ifstream libro(archivoLibro);
+
+    if (!vocabulario.is_open() || !libro.is_open()) {
+        std::cerr << "Error al abrir uno de los archivos de entrada." << std::endl;
+        return 1;
+    }
+
+    // Contar ocurrencias
+    std::unordered_map<std::string, int> contador = contarOcurrencias(vocabulario, libro);
+
+    // Guardar resultados en archivo CSV
+    guardarCSV(contador, archivoSalida);
+
+    std::cout << "Proceso completado. Resultados guardados en " << archivoSalida << std::endl;
+
+    // Cerrar archivos
+    vocabulario.close();
+    libro.close();
 
     return 0;
 }
+
