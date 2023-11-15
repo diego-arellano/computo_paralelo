@@ -5,6 +5,8 @@
 #include <vector>
 #include <string>
 
+
+
 // Función para contar las ocurrencias de palabras en el libro
 std::unordered_map<std::string, int> contarOcurrencias(std::ifstream &vocabulario, std::ifstream &libro) {
     std::unordered_map<std::string, int> contador;
@@ -34,7 +36,7 @@ std::unordered_map<std::string, int> contarOcurrencias(std::ifstream &vocabulari
 void guardarCSV(const std::unordered_map<std::string, int> &contador, const std::string &nombreArchivoSalida) {
     std::ofstream archivoSalida(nombreArchivoSalida);
     if (!archivoSalida.is_open()) {
-        std::cerr << "Error al abrir el archivo de salida." << std::endl;
+        std::cerr << "Error" << std::endl;
         return;
     }
 
@@ -52,16 +54,19 @@ void guardarCSV(const std::unordered_map<std::string, int> &contador, const std:
 int main() {
     // Nombre de los archivos CSV de entrada y salida
     std::string archivoVocabulario = "vocabulario.csv";
-    std::string archivoLibro = "libro.csv";
+    std::string archivoLibro = "dickens_a_christmas_carol.txt";
     std::string archivoSalida = "ocurrencias.csv";
 
     // Abrir archivos de entrada
     std::ifstream vocabulario(archivoVocabulario);
     std::ifstream libro(archivoLibro);
 
-    if (!vocabulario.is_open() || !libro.is_open()) {
-        std::cerr << "Error al abrir uno de los archivos de entrada." << std::endl;
-        return 1;
+    if (!vocabulario.is_open()) {
+        std::cerr << "Error al abrir el archivo de vocabulario." << std::endl;
+    }
+
+    if (!libro.is_open()) {
+        std::cerr << "Error al abrir el archivo del libro." << std::endl;
     }
 
     // Contar ocurrencias
@@ -78,4 +83,3 @@ int main() {
 
     return 0;
 }
-
