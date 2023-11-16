@@ -1,26 +1,35 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <unordered_map>
+#include <map>
 #include <vector>
 #include <string>
 
-// Función para contar las ocurrencias de palabras en un libro
-std::unordered_map<std::string, int> contarOcurrencias(std::ifstream &vocabulario, std::ifstream &libro) {
-    std::unordered_map<std::string, int> contador;
+// Función para obtener el vocabulario desde un archivo CSV
+std::vector<std::string> obtenerVocabulario(std::ifstream &vocabulario) {
+    std::vector<std::string> palabras;
     std::string palabra;
 
-    // Inicializar el contador para cada palabra del vocabulario
-    while (std::getline(vocabulario, palabra)) {
-        contador[palabra] = 0;
+    while (std::getline(vocabulario, palabra, ',')) {
+        palabras.push_back(palabra);
     }
 
-    // Leer el libro y contar las ocurrencias de cada palabra
+    return palabras;
+}
+
+// Función para contar las ocurrencias de palabras en un libro
+std::map<std::string, int> contarOcurrencias(const std::vector<std::string> &vocabulario, std::ifstream &libro) {
+    std::map<std::string, int> contador;
+    std::string palabra;
+
+    for (const auto &palabraVocabulario : vocabulario) {
+        contador[palabraVocabulario] = 0;
+    }
+
     std::string linea;
-    while (std::getline(libro, linea)) {
+    while (std::getline(libro, linea, ',')) {
         std::istringstream iss(linea);
         while (iss >> palabra) {
-            // Si la palabra está en el vocabulario, incrementar el contador
             if (contador.find(palabra) != contador.end()) {
                 contador[palabra]++;
             }
@@ -31,56 +40,54 @@ std::unordered_map<std::string, int> contarOcurrencias(std::ifstream &vocabulari
 }
 
 // Función para guardar las ocurrencias en un archivo CSV
-void guardarCSV(const std::unordered_map<std::string, int> &contador, const std::string &nombreLibro, const std::string &nombreArchivoSalida, const std::vector<std::string> &vocabulario) {
-    std::ofstream archivoSalida(nombreArchivoSalida, std::ios::app); // Modo de apertura: append
+void guardarCSV(const std::vector<std::string> &vocabulario, const std::vector<std::map<std::string, int>> &contadores, const std::vector<std::string> &nombresLibros, const std::string &nombreArchivoSalida) {
+    std::ofstream archivoSalida(nombreArchivoSalida);
     if (!archivoSalida.is_open()) {
         std::cerr << "Error al abrir el archivo de salida." << std::endl;
         return;
     }
 
-    // Escribir el nombre del libro como primera columna
-    archivoSalida << nombreLibro;
-
-    // Escribir encabezados de columnas (palabras)
+    // Escribir encabezados del vocabulario
+    archivoSalida << "Libro";
     for (const auto &palabra : vocabulario) {
         archivoSalida << "," << palabra;
     }
-
     archivoSalida << "\n";
 
     // Escribir datos
-    archivoSalida << nombreLibro;
-    for (const auto &palabra : vocabulario) {
-        archivoSalida << "," << contador.at(palabra);
+    for (std::size_t i = 0; i < contadores.size(); ++i) {
+        archivoSalida << nombresLibros[i];
+        for (const auto &palabra : vocabulario) {
+            archivoSalida << "," << contadores[i].at(palabra);
+        }
+        archivoSalida << "\n";
     }
-
-    archivoSalida << "\n";
 
     archivoSalida.close();
 }
 
 int main() {
-    // Nombre del archivo CSV de vocabulario
     std::string archivoVocabulario = "vocabulario.csv";
-
-    // Nombres de los archivos CSV de libros
     std::vector<std::string> archivosLibros = {"dickens_a_christmas_carol.txt", "dickens_a_tale_of_two_cities.txt", "dickens_oliver_twist.txt", "shakespeare_hamlet.txt", "shakespeare_romeo_juliet.txt", "shakespeare_the_merchant_of_venice.txt"};
 
-    // Leer el vocabulario
-    std::ifstream archivoVocabularioStream(archivoVocabulario);
-    std::vector<std::string> vocabulario;
-    std::string palabra;
-    while (std::getline(archivoVocabularioStream, palabra)) {
-        vocabulario.push_back(palabra);
+    std::ifstream vocabulario(archivoVocabulario);
+    if (!vocabulario.is_open()) {
+        std::cerr << "Error al abrir el archivo de vocabulario." << std::endl;
+        return 1;
     }
 
-    // Para cada libro, contar las ocurrencias y guardar en un archivo CSV
-    for (const auto &archivoLibro : archivosLibros) {
-        std::ifstream vocabulario_archivo(archivoVocabulario);
-        std::ifstream libro(archivoLibro);
+    // Obtener el vocabulario desde el archivo CSV
+    std::vector<std::string> vocabularioPalabras = obtenerVocabulario(vocabulario);
 
-        if (!vocabulario_archivo.is_open() || !libro.is_open()) {
-            std::cerr << "Error al abrir uno de los archivos de entrada." << std::endl;
+    // Contadores para cada libro
+    std::vector<std::map<std::string, int>> contadores;
+    std::vector<std::string> nombresLibros;
+
+    // Para cada libro, contar las ocurrencias y guardar en un mapa
+    for (const auto &archivoLibro : archivosLibros) {
+        std::ifstream libro(archivoLibro);
+        if (!libro.is_open()) {
+            std::cerr << "Error al abrir el archivo de libro." << std::endl;
             return 1;
         }
 
@@ -88,17 +95,22 @@ int main() {
         std::string nombreLibro = archivoLibro.substr(0, archivoLibro.find_last_of("."));
 
         // Contar ocurrencias
-        std::unordered_map<std::string, int> contador = contarOcurrencias(vocabulario_archivo, libro);
+        std::map<std::string, int> contador = contarOcurrencias(vocabularioPalabras, libro);
 
-        // Guardar resultados en un archivo CSV
-        guardarCSV(contador, nombreLibro, "resultados.csv", vocabulario);
+        // Agregar a los vectores
+        contadores.push_back(contador);
+        nombresLibros.push_back(nombreLibro);
 
-        std::cout << "Proceso completado para " << nombreLibro << ". Resultados guardados en resultados.csv" << std::endl;
+        std::cout << "Proceso completado para " << nombreLibro << std::endl;
 
-        // Cerrar archivos
-        vocabulario_archivo.close();
         libro.close();
     }
 
+    // Guardar resultados en un archivo CSV
+    guardarCSV(vocabularioPalabras, contadores, nombresLibros, "resultados.csv");
+
+    vocabulario.close();
+
     return 0;
 }
+
